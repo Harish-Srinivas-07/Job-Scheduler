@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/home_screen.dart';
 import '../User/login_screen.dart';
 
 class SplashScreen extends StatelessWidget {
+  late String email;
+
   @override
   Widget build(BuildContext context) {
-    // Simulate loading process for 2 seconds
     Future.delayed(Duration(seconds: 2), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );
+      _checkCredentials(context);
     });
 
     return Scaffold(
@@ -36,5 +36,34 @@ class SplashScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _checkCredentials(BuildContext context) async {
+    SharedPreferences _prefs = await SharedPreferences.getInstance();
+    bool? credentials = _prefs.getBool('credentials');
+    String? email = _prefs.getString('email');
+
+    if (credentials != null && credentials) {
+      // Navigate to HomeScreen with email
+      String? email = _prefs.getString('email');
+      print(email);
+      if (email != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => HomeScreen(email: email)),
+        );
+      } else {
+        // If email is not available, navigate to login screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      }
+    } else {
+      // Navigate to login screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => LoginPage()),
+        // MaterialPageRoute(builder: (context) => HomeScreen(email: "harish@gmail.com")),
+
+      );
+    }
   }
 }

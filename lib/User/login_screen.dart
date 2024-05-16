@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../utils/app_validator.dart';
 import '../screens/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginPage extends StatefulWidget {
   @override
@@ -13,8 +15,12 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _appValidator = AppValidator();
 
+
+  late int tab;
+
   bool _isLoading = false;
   Map<String, String> userCredentials = {};
+
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: true, // Align title at the center
+        centerTitle: true,backgroundColor: Colors.blue[100],
       ),
       body: Padding(
         padding: const EdgeInsets.all(40.0),
@@ -35,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Welcome, Buddy!', // Add welcoming text
+              'Welcome, Buddy!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20,
@@ -48,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 children: [
                   SizedBox(
-                    height: 60, // Increase text field height
+                    height: 60,
                     child: TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -69,6 +75,7 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
             ),
+
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isLoading ? null : _submitForm,
@@ -78,7 +85,8 @@ class _LoginPageState extends State<LoginPage> {
                 width: 30,
                 child: CircularProgressIndicator(),
               )
-                  : Row(
+                  :
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.done_all),
@@ -93,13 +101,13 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(150, 60), // Minimize button width
+                minimumSize: Size(150, 60),
                 backgroundColor: const Color.fromARGB(255, 46, 48, 146),
-                foregroundColor: Colors.white, // Dark blue background color
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.0), // Rounded button corners
+                  borderRadius: BorderRadius.circular(30.0),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 15), // Increase button height
+                padding: EdgeInsets.symmetric(vertical: 15),
               ),
             ),
           ],
@@ -108,25 +116,26 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
-      // Simulating a login process for 2 seconds
-      Future.delayed(Duration(seconds: 2), () {
-        setState(() {
-          _isLoading = false;
-          // Store user credentials upon successful login
-          userCredentials[_emailController.text] = _passwordController.text;
-        });
-        // Navigate to HomeScreen on successful login
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => HomeScreen(email: _emailController.text)),
-        );
-      });
+      // Simulate network request delay
+      await Future.delayed(Duration(seconds: 2));
+
+      // Save email and credentials
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('email', _emailController.text);
+      await prefs.setBool('credentials', true);
+
+      // Navigate to HomeScreen on successful login
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HomeScreen(email: _emailController.text)),
+      );
     }
   }
+
 
   InputDecoration _buildInputDecoration(String label, IconData suffixIcon) {
     return InputDecoration(
@@ -134,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
       prefixIcon: Icon(suffixIcon),
       fillColor: Colors.white,
       filled: true,
-      contentPadding: EdgeInsets.symmetric(vertical: 20), // Increase text field width
+      contentPadding: EdgeInsets.symmetric(vertical: 30),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(80.0),
         borderSide: BorderSide(color: Color.fromARGB(255, 46, 48, 146)),
