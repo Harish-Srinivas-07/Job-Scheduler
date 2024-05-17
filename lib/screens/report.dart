@@ -26,8 +26,8 @@ class _ReportPageState extends State<ReportPage> {
   Future<void> _initSharedPreferences() async {
     _prefs = await SharedPreferences.getInstance();
     _email = _prefs.getString('email') ?? '';
-    // _loginTime = _prefs.getString('login_time') ?? '';
-    _loginTime = '09:00 PM';
+    _loginTime = _prefs.getString('login_time') ?? '';
+    // _loginTime = '09:00 PM';
     _logoutTime = _prefs.getString('logout_time') ?? '';
     _idle = _prefs.getString('_idleDuration') ?? '';
     _task  = _prefs.getInt('numTasksCompleted') ?? 0;
@@ -76,15 +76,27 @@ class _ReportPageState extends State<ReportPage> {
 
 
 
+// Inside your _calculateDuration method
+  bool isDurationGreaterThanEightHours(String duration) {
+    List<String> parts = duration.split(' ');
+    int hours = int.parse(parts[0]);
+    return hours > 8;
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async => false, // Prevent back navigation
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Report Page',
-              style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold,)
-          ),backgroundColor: Colors.blue[100],
+          title: Text(
+            'Report Page',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: Colors.blue[100],
         ),
         body: _isLoading
             ? Center(child: CircularProgressIndicator())
@@ -97,7 +109,7 @@ class _ReportPageState extends State<ReportPage> {
                 'Today Date :',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 5,),
+              SizedBox(height: 5),
               Text(
                 DateFormat('dd MMM yyyy').format(DateTime.now()), // Display today's date
                 style: TextStyle(fontSize: 18),
@@ -127,12 +139,12 @@ class _ReportPageState extends State<ReportPage> {
                 'Task Completed :',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 5,),
+              SizedBox(height: 5),
               Text(
                 _task.toString(),
                 style: TextStyle(fontSize: 18),
               ),
-              SizedBox(height: 20,),
+              SizedBox(height: 20),
               Text(
                 'Idle Duration :',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -149,8 +161,13 @@ class _ReportPageState extends State<ReportPage> {
               ),
               SizedBox(height: 5),
               Text(
-                _calculateDuration(_loginTime, _logoutTime ,'0:00:00'),
-                style: TextStyle(fontSize: 16),
+                _calculateDuration(_loginTime, _logoutTime, '0:00:00'),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDurationGreaterThanEightHours(_calculateDuration(_loginTime, _logoutTime, '0:00:00'))
+                      ? Colors.green
+                      : Colors.red,
+                ),
               ),
               SizedBox(height: 20),
               Text(
@@ -162,15 +179,50 @@ class _ReportPageState extends State<ReportPage> {
                 _idle.isNotEmpty
                     ? _calculateDuration(_loginTime, _logoutTime, _idle)
                     : 'Not available',
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: _idle.isNotEmpty && isDurationGreaterThanEightHours(_calculateDuration(_loginTime, _logoutTime, _idle))
+                      ? Colors.green
+                      : Colors.red,
+                ),
               ),
-
+              SizedBox(height: 20),
+              // Add the rounded button here
+              Container(
+                width: double.infinity,
+                height: 50,
+                margin: const EdgeInsets.symmetric(vertical: 20),
+                child: TextButton(
+                  onPressed: () async {
+                    await _prefs.setInt('_currentTab', 0);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginPage()),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.indigo[800],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: Text(
+                    'Navigate to Home Login',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
 
   String _calculateDuration(String loginTime, String logoutTime, String idleTime) {
     if (loginTime.isEmpty || logoutTime.isEmpty) {
@@ -200,5 +252,6 @@ class _ReportPageState extends State<ReportPage> {
 
     return hours == '00' ? '$minutes minutes.' : '$hours hours and $minutes minutes.';
   }
+
 
 }
