@@ -6,38 +6,6 @@ import '../User/login_screen.dart';
 class SplashScreen extends StatelessWidget {
   late String email;
 
-  @override
-  Widget build(BuildContext context) {
-    Future.delayed(Duration(seconds: 2), () {
-      _checkCredentials(context);
-    });
-
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Welcome to Job Scheduler',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Manage all your tasks',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _checkCredentials(BuildContext context) async {
     SharedPreferences _prefs = await SharedPreferences.getInstance();
     bool? credentials = _prefs.getBool('credentials');
@@ -66,4 +34,38 @@ class SplashScreen extends StatelessWidget {
       );
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    Future.delayed(Duration(seconds: 2), () {
+      _checkCredentials(context);
+    });
+
+    return Scaffold(
+      backgroundColor: Colors.blue[600], // Pale blue background color
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Welcome to Job Scheduler',
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Manage all your tasks',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }

@@ -83,147 +83,6 @@ class _ReportPageState extends State<ReportPage> {
     return hours > 8;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => false, // Prevent back navigation
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Report Page',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          backgroundColor: Colors.blue[100],
-        ),
-        body: _isLoading
-            ? Center(child: CircularProgressIndicator())
-            : Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Today Date :',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 5),
-              Text(
-                DateFormat('dd MMM yyyy').format(DateTime.now()), // Display today's date
-                style: TextStyle(fontSize: 18),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Login Time:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 5),
-              Text(
-                _loginTime.isNotEmpty ? _loginTime : 'Not available',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Logout Time:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 5),
-              Text(
-                _logoutTime.isNotEmpty ? _logoutTime : 'Not available',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Task Completed :',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 5),
-              Text(
-                _task.toString(),
-                style: TextStyle(fontSize: 18),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Idle Duration :',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 5),
-              Text(
-                _idle.isNotEmpty ? _formatIdleTime(_idle) : 'Not available',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Total Work Hours :',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 5),
-              Text(
-                _calculateDuration(_loginTime, _logoutTime, '0:00:00'),
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isDurationGreaterThanEightHours(_calculateDuration(_loginTime, _logoutTime, '0:00:00'))
-                      ? Colors.green
-                      : Colors.red,
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Total Active time:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 5),
-              Text(
-                _idle.isNotEmpty
-                    ? _calculateDuration(_loginTime, _logoutTime, _idle)
-                    : 'Not available',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: _idle.isNotEmpty && isDurationGreaterThanEightHours(_calculateDuration(_loginTime, _logoutTime, _idle))
-                      ? Colors.green
-                      : Colors.red,
-                ),
-              ),
-              SizedBox(height: 20),
-              // Add the rounded button here
-              Container(
-                width: double.infinity,
-                height: 50,
-                margin: const EdgeInsets.symmetric(vertical: 20),
-                child: TextButton(
-                  onPressed: () async {
-                    await _prefs.setInt('_currentTab', 0);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginPage()),
-                    );
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.indigo[800],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: Text(
-                    'Navigate to Home Login',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
   String _calculateDuration(String loginTime, String logoutTime, String idleTime) {
     if (loginTime.isEmpty || logoutTime.isEmpty) {
       return 'Not available';
@@ -249,9 +108,189 @@ class _ReportPageState extends State<ReportPage> {
 
     String hours = (activeDuration.inHours % 24).toString().padLeft(2, '0');
     String minutes = (activeDuration.inMinutes % 60).toString().padLeft(2, '0');
-
     return hours == '00' ? '$minutes minutes.' : '$hours hours and $minutes minutes.';
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async => false, // Prevent back navigation
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Report Page',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: Colors.blue[100],
+        ),
+        body: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0), // Adjusted padding for the card
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Today Date :',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        DateFormat('dd MMM yyyy').format(DateTime.now()), // Display today's date
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Login Time:',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        _loginTime.isNotEmpty ? _loginTime : 'Not available',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Logout Time:',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        _logoutTime.isNotEmpty ? _logoutTime : 'Not available',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Task Completed :',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        _task.toString(),
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Idle Duration :',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        _idle.isNotEmpty ? _formatIdleTime(_idle) : 'Not available',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total Work Hours :',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        _calculateDuration(_loginTime, _logoutTime, '0:00:00'),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isDurationGreaterThanEightHours(_calculateDuration(_loginTime, _logoutTime, '00:00:00'))
+                              ? Colors.green
+                              : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total Active time:',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        _idle.isNotEmpty
+                            ? _calculateDuration(_loginTime, _logoutTime, _idle)
+                            : 'Not available',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: _idle.isNotEmpty && isDurationGreaterThanEightHours(_calculateDuration(_loginTime, _logoutTime, _idle))
+                              ? Colors.green
+                              : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.center, // Center the button
+                    child: SizedBox(
+                      width: 300, // Increased button width
+                      child: TextButton(
+                        onPressed: () async {
+                          await _prefs.setInt('_currentTab', 0);
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => LoginPage()),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.indigo[800],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12), // Adjusted padding for the button
+                          child: Text(
+                            'Navigate to Home Login',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18, // Increased font size
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 
 
 }

@@ -19,102 +19,6 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   Map<String, String> userCredentials = {};
 
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => false, // Prevent back navigation
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Job Scheduler Login Portal',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.blue[100],
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(40.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Welcome, Buddy!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 40),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 60,
-                      child: TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: _buildInputDecoration('Email', Icons.email),
-                        validator: (value) => _appValidator.validateEmail(value),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    SizedBox(
-                      height: 60, // Increase text field height
-                      child: TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: _buildInputDecoration('Password', Icons.lock),
-                        validator: (value) => _appValidator.validatePassword(value),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitForm,
-                child: _isLoading
-                    ? SizedBox(
-                  height: 30,
-                  width: 30,
-                  child: CircularProgressIndicator(),
-                )
-                    : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.done_all),
-                    SizedBox(width: 10),
-                    Text(
-                      'Sign in',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(150, 60),
-                  backgroundColor: const Color.fromARGB(255, 46, 48, 146),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 15),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -157,4 +61,128 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async => false, // Prevent back navigation
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Job Scheduler Login Portal',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,color: Colors.white
+            ),
+          ),
+          centerTitle: false, // Align title to the left
+          backgroundColor: Colors.blue[600],
+        ),
+        backgroundColor: Colors.blue[50], // Pale blue background color
+        body: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              MediaQuery.of(context).size.width > 600
+                  ? Expanded(
+                flex: 1,
+                child: Image.asset(
+                  'assets/images/office.png',
+                  height: 550,
+                  width: 500, // Adjust image height as needed
+                ),
+              )
+                  : SizedBox(),
+              MediaQuery.of(context).size.width > 600 ? SizedBox(width: 40) : SizedBox(height: 20),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Welcome, Buddy!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            height: 55,
+                            // width: 400, // Removed width constraint
+                            child: TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: _buildInputDecoration('Enter your email id', Icons.email),
+                              validator: (value) => _appValidator.validateEmail(value),
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          SizedBox(
+                            height: 55,
+                            // width: 400, // Removed width constraint
+                            child: TextFormField(
+                              controller: _passwordController,
+                              obscureText: true,
+                              decoration: _buildInputDecoration('Provide Password', Icons.lock),
+                              validator: (value) => _appValidator.validatePassword(value),
+                              // Less rounded border
+
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _submitForm,
+                      child: _isLoading
+                          ? SizedBox(
+                        height: 30,
+                        width: 30,
+                        child: CircularProgressIndicator(),
+                      )
+                          : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.done_all),
+                          SizedBox(width: 10),
+                          Text(
+                            'Sign in',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(150, 60), // Fixed size
+                        backgroundColor: Colors.blue[700],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(40.0),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
 }

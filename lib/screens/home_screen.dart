@@ -6,6 +6,7 @@ import '../screens/report.dart';
 import '../User/login_screen.dart';
 import 'dart:async';
 import 'package:idle_detector_wrapper/idle_detector_wrapper.dart';
+import 'package:responsive_grid/responsive_grid.dart';
 
 class HomeScreen extends StatefulWidget {
   final String email;
@@ -17,13 +18,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   List<Map<String, dynamic>> tasks = [];
   late SharedPreferences _prefs;
-  late Timer _taskTimer;
-  Timer? _idleTimer; // Make _idleTimer nullable
+  Timer? _taskTimer;
+  Timer? _idleTimer;
   late String _loginTime;
   late int tab;
   Duration _idleDuration = Duration.zero;
-  bool _isIdle = false;
   int numTasksCompleted = 0;
+  bool _isDialogOpen = false;
+  bool _isHaltDialogOpen = false;
 
   @override
   void initState() {
@@ -36,13 +38,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _taskTimer.cancel();
+    _taskTimer?.cancel();
     _idleTimer?.cancel(); // Use null-aware operator to cancel if not null
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   void _startTaskTimer() {
+    _taskTimer?.cancel();
     _taskTimer = Timer.periodic(Duration(seconds: 30), (timer) {
       if (!_isDialogOpen) {
         _checkIncompleteTasks();
@@ -53,11 +56,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    // state == AppLifecycleState.paused ||
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      // Start tracking idle time
       _startIdleTimer();
     } else if (state == AppLifecycleState.resumed) {
-      // Stop tracking idle time
       _stopIdleTimer();
     }
   }
@@ -80,9 +82,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
-
-  bool _isDialogOpen = false;
-  bool _isHaltDialogOpen = false;
 
   void _showIdleResumeDialog() {
     _isHaltDialogOpen = true;
@@ -117,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     setState(() {
                       var task = tasks.firstWhere((task) => !task['completed']);
                       String currentTime = DateFormat('hh:mm a').format(DateTime.now());
-                      String newEntry = 'Halt stamp: $currentTime - $haltReason';
+                      String newEntry = '- $currentTime reason: $haltReason';
                       if (task.containsKey('haltReasons')) {
                         task['haltReasons'] += '\n$newEntry';
                       } else {
@@ -133,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     );
                   }
                 },
-                child: Text('Submit'),
+                child: Text('Submit',style: TextStyle(fontWeight: FontWeight.bold,) ),
               ),
             ],
           ),
@@ -184,9 +183,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   onPressed: () {
                     if (progressStatus.isNotEmpty) {
                       setState(() {
+                        _isDialogOpen = false;
+                        _startTaskTimer();
                         var task = tasks.firstWhere((task) => !task['completed']);
                         String currentTime = DateFormat('hh:mm a').format(DateTime.now());
-                        String newEntry = 'Progress stamp: $currentTime - $progressStatus';
+                        String newEntry = '- $currentTime status : $progressStatus';
                         if (task.containsKey('progressStatuses')) {
                           task['progressStatuses'] += '\n$newEntry';
                         } else {
@@ -194,7 +195,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         }
                       });
                       Navigator.of(context).pop();
-                      _isDialogOpen = false;
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -203,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       );
                     }
                   },
-                  child: Text('Yes'),
+                  child: Text('Yes',style: TextStyle(fontWeight: FontWeight.bold,)),
                 ),
               ],
             ),
@@ -212,10 +212,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     }
   }
-
-
-
-
 
   void _initSharedPreferences() async {
     _prefs = await SharedPreferences.getInstance();
@@ -279,194 +275,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     setState(() {});
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-        onWillPop: () async => false, // Prevent back navigation
-        child:IdleDetector(
-      idleTime: const Duration(seconds: 10),
-      onIdle: () {
-        setState(() {
-          // Reset idle duration when idle
-          _idleDuration += const Duration(seconds: 10);
-          _prefs.setString('_idleDuration', _idleDuration.toString().split('.').first);
-        });
-      },
-      child: Scaffold(
-        appBar: AppBar(
-        title: Text(
-        'Job Scheduler',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-          backgroundColor: Colors.blue[100],
-          actions: [
-            ElevatedButton(
-              onPressed: _logout,
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                backgroundColor: Colors.red,
-              ),
-              child: Text('Logout',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
-            ),
-          ],
-        ),
-        body: SingleChildScrollView( // Wrap your body with SingleChildScrollView to enable scrolling
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Welcome ${widget.email.split('@').first.split('.')[0][0].toUpperCase()}${widget.email.split('@').first.split('.')[0].substring(1)} 👋',
-                            style: TextStyle(
-                              fontSize: 25,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Logged in: $_loginTime',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text(
-                                'Idle Duration: ${_formatDuration(_idleDuration)}', // Display idle duration
-                                style: TextStyle(
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              tasks.isEmpty
-                  ? Center(
-                child: Text(
-                  'Seems like no job today ...',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-              )
-                  : ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: tasks.length,
-                itemBuilder: (context, index) {
-                  final task = tasks[index];
-                  return InkWell(
-                    onTap: () {
-                      if (!task['completed']) {
-                        _showCompletionConfirmation(context, task, index);
-                      }
-                    },
-                    child: Card(
-                      color: task['completed'] ? Colors.green[300] : Colors.red[100],
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              task['title'] ?? '',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                decoration: task['completed'] ? TextDecoration.lineThrough : null,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Text(task['description'] ?? ''),
-                            SizedBox(height: 10),
-                            Text(
-                              'Job Assigned time: ${task['startTime']}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              task['completed'] ? 'Completed' : 'Assigned',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: task['completed'] ? Colors.green[900] : Colors.red,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (task.containsKey('progressStatuses'))
-                              Text(
-                                task['progressStatuses'],
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                            if (task.containsKey('haltReasons'))
-                              Text(
-                                task['haltReasons'],
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              )
-
-
-            ],
-          ),
-        ),
-        floatingActionButton: tasks.isNotEmpty && _hasIncompleteTasks()
-            ? null
-            : FloatingActionButton.extended(
-          onPressed: () async {
-            final newTask = await Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => AddTaskScreen()),
-            );
-            if (newTask != null) {
-              setState(() {
-                tasks.add(newTask);
-              });
-            }
-          },
-          icon: Icon(Icons.add),
-          label: Text('Create Task'),
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      ),
-    ));
-  }
-
-
 
   String _formatDuration(Duration duration) {
     return '${duration.inHours}:${(duration.inMinutes % 60).toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
@@ -533,4 +341,278 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       },
     );
   }
+
+    @override
+    Widget build(BuildContext context) {
+      return WillPopScope(
+        onWillPop: () async => false, // Prevent back navigation
+        child: IdleDetector(
+          idleTime: const Duration(seconds: 10),
+          onIdle: () {
+            setState(() {
+              // Reset idle duration when idle
+              _idleDuration += const Duration(seconds: 10);
+              _prefs.setString('_idleDuration', _idleDuration.toString().split('.').first);
+            });
+          },
+          child: Scaffold(
+            backgroundColor: Colors.blue[10],
+            appBar: AppBar(
+              title: Text(
+                'Job Scheduler',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              backgroundColor: Colors.blue[600],
+              // actions: [
+              //   Padding(
+              //     padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              //     child: ElevatedButton.icon(
+              //       onPressed: _logout,
+              //       style: ElevatedButton.styleFrom(
+              //         shape: RoundedRectangleBorder(
+              //           borderRadius: BorderRadius.circular(30),
+              //         ),
+              //         backgroundColor: Colors.red,
+              //       ),
+              //       icon: Icon(Icons.logout,color: Colors.white),
+              //       label: Text('Logout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              //     ),
+              //   ),
+              // ],
+
+            ),
+            body: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    color: Colors.lightBlue[50], // Light blue color
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Welcome ${widget.email.split('@').first.split('.')[0][0].toUpperCase()}${widget.email.split('@').first.split('.')[0].substring(1)} 👋',
+                                style: TextStyle(
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: _logout,
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                                icon: Icon(Icons.logout, color: Colors.white),
+                                label: Text(
+                                  'Logout',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Logged in: $_loginTime',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.blueAccent,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Idle Duration: ${_formatDuration(_idleDuration)}', // Display idle duration
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  tasks.isEmpty
+                      ? Center (child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/images/empty.png',height: 350,),
+                      Text(
+                        'no Tasks Found...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                      ),// Add the Image.asset widget
+                    ],
+                  ))
+                      : ResponsiveGridRow(
+                    children: tasks.map((task) {
+                      return ResponsiveGridCol(
+                        lg: 3,
+                        md: 4,
+                        sm: 6,
+                        xs: 12,
+                        child: InkWell(
+                          onTap: () {
+                            if (!task['completed']) {
+                              _showCompletionConfirmation(context, task, tasks.indexOf(task));
+                            }
+                          },
+                          child: Card(
+                            color: task['completed'] ? Colors.green[200] : Colors.red[100],
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    task['title'] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      decoration: task['completed'] ? TextDecoration.lineThrough : null,
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    task['description'] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    'Assigned at ${task['startTime']}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    task['completed'] ? 'Task Completed' : 'Assigned',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: task['completed'] ? Colors.green[900] : Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  if (task.containsKey('progressStatuses'))
+                                    Text(
+                                      'Progress Entries',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  if (task.containsKey('progressStatuses'))
+                                    Text(
+                                      task['progressStatuses'],
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  SizedBox(height: 10),
+                                  if (task.containsKey('haltReasons'))
+                                    Text(
+                                      'iDle Records',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  if (task.containsKey('haltReasons'))
+                                    Text(
+                                      task['haltReasons'],
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  SizedBox(height: 20),
+                  // Placeholder card for creating a task
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: InkWell(
+                      onTap: () async {
+                        final newTask = await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => AddTaskScreen()),
+                        );
+                        if (newTask != null) {
+                          setState(() {
+                            tasks.add(newTask);
+                            _startTaskTimer(); // Start the task timer after a task is assigned
+                          });
+                        }
+                      },
+                      child: Visibility(
+                        visible:  !_hasIncompleteTasks(),
+                        child: Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          color: Colors.green[400],
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add,
+                                  size: 50,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'Create Task',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
 }
